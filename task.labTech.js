@@ -67,15 +67,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // save spawning creep to task memory
         memory.spawning.push(params);
         // clean/validate task memory queued creeps
-        const queued = [];
-        const validateQueued = o => {
-            let room = Game.rooms[o.room];
-            if ((room.spawnQueueMedium.some(c => c.name == o.name)) || (room.spawnQueueLow.some(c => c.name == o.name))) {
-                queued.push(o);
-            }
-        };
-        memory.queued.forEach(validateQueued);
-        memory.queued = queued;
+        Task.validateQueued(memory);
     }
 };
 // when a creep completed spawning
@@ -95,16 +87,9 @@ mod.handleSpawningCompleted = creep => {
         const memory = Task.labTech.memory(flag);
         // save running creep to task memory
         memory.running.push(creep.name);
+
         // clean/validate task memory spawning creeps
-        const spawning = [];
-        const validateSpawning = o => {
-            const spawn = Game.spawns[o.spawn];
-            if (spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
-                spawning.push(o);
-            }
-        };
-        memory.spawning.forEach(validateSpawning);
-        memory.spawning = spawning;
+        Task.validateSpawning(memory.spawning);
     }
 };
 // when a creep died (or will die soon)
@@ -118,20 +103,8 @@ mod.handleCreepDied = name => {
     // TODO: remove  || creep.data.destiny.flagName (temporary backward compatibility)
     const flag = Game.flags[mem.destiny.targetName || mem.destiny.flagName];
     if (flag) {
-        // get task memory
         const memory = Task.labTech.memory(flag);
-        // clean/validate task memory running creeps
-        const running = [];
-        const validateRunning = o => {
-            const creep = Game.creeps[o];
-            // invalidate old creeps for predicted spawning
-            // TODO: better distance calculation
-            if (creep && creep.name != name && creep.data !== undefined && creep.data.spawningTime !== undefined && creep.ticksToLive > (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName) * 25) )) {
-                running.push(o);
-            }
-        };
-        memory.running.forEach(validateRunning);
-        memory.running = running;
+        Task.validateRunning(memory.running, flag.pos.roomName, name);
     }
 };
 // get task memory

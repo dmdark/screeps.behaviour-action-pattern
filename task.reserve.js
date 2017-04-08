@@ -93,7 +93,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory queued creeps
-        if( memory.valid != Game.time ) Task.reserve.validateMemoryQueued(memory);
+        Task.validateQueued(memory.queued, ['Low', 'Medium']);
         // save spawning creep to task memory
         memory.spawning.push(params);
     }
@@ -112,7 +112,7 @@ mod.handleSpawningCompleted = creep => {
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory spawning creeps
-        if( memory.valid != Game.time ) Task.reserve.validateMemorySpawning(memory);
+        Task.validateSpawning(memory.spawning);
         // save running creep to task memory
         memory.running.push(creep.name);
     }
@@ -128,10 +128,8 @@ mod.handleCreepDied = name => {
     // get flag which caused request of that creep
     let flag = Game.flags[mem.destiny.targetName];
     if (flag) {
-        // get task memory
         let memory = Task.reserve.memory(flag);
-        // clean/validate task memory running creeps
-        if( memory.valid != Game.time ) Task.reserve.validateMemoryRunning(memory);
+        Task.validateRunning(memory.running, flag.pos.roomName, name);
     }
 };
 mod.nextAction = creep => {
@@ -173,55 +171,6 @@ mod.memory = (flag) => {
     if( !memory.valid || memory.valid < ( Game.time - MEMORY_RESYNC_INTERVAL ) )
         Task.reserve.validateMemory(memory);
     return memory;
-};
-mod.validateMemoryQueued = memory => {
-    // clean/validate task memory queued creeps
-    let queued = [];
-    let validateQueued = entry => {
-        let room = Game.rooms[entry.room];
-        if( (room.spawnQueueMedium.some( c => c.name == entry.name)) || (room.spawnQueueLow.some( c => c.name == entry.name)) ){
-            queued.push(entry);
-        }
-    };
-    memory.queued.forEach(validateQueued);
-    memory.queued = queued;
-};
-mod.validateMemorySpawning = memory => {
-    // clean/validate task memory spawning creeps
-    let spawning = [];
-    let validateSpawning = entry => {
-        let spawn = Game.spawns[entry.spawn];
-        if( spawn && ((spawn.spawning && spawn.spawning.name == entry.name) || (spawn.newSpawn && spawn.newSpawn.name == entry.name))) {
-            spawning.push(entry);
-        }
-    };
-    memory.spawning.forEach(validateSpawning);
-    memory.spawning = spawning;
-};
-mod.validateMemoryRunning = memory => {
-    // clean/validate task memory running creeps
-    let running = [];
-    let validateRunning = entry => {
-        // invalidate dead or old creeps for predicted spawning
-        let creep = Game.creeps[entry];
-        if( !creep || !creep.data ) return;
-        // TODO: better distance calculation
-        let prediction;
-        if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
-        else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*50));
-        else prediction = (routeRange(creep.data.homeRoom, flag.pos.roomName) + 1) * 50;
-        if( creep.ticksToLive > prediction ) {
-            running.push(entry);
-        }
-    };
-    memory.running.forEach(validateRunning);
-    memory.running = running;
-};
-mod.validateMemory = memory => {
-    Task.reserve.validateMemoryQueued(memory);
-    Task.reserve.validateMemorySpawning(memory);
-    Task.reserve.validateMemoryRunning(memory);
-    memory.valid = Game.time;
 };
 mod.strategies = {
     defaultStrategy: {

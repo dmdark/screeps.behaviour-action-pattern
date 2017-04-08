@@ -15,11 +15,13 @@ mod.handleRoomDied = room => {
     if( room.energyAvailable > 199 ) {
         // flush high queue
         room.spawnQueueHigh.splice(0, room.spawnQueueHigh.length);
+        const definition = Task.pioneer.creep.worker;
         pioneer = !Task.spawn(
-            Task.pioneer.creep.worker, // creepDefinition
+            definition, // creepDefinition
             { // destiny
                 task: recoveryType, // taskName
-                targetName: room.name // targetName
+                targetName: room.name, // targetName
+                type: definition.behaviour,
             }, 
             { // spawn room selection params
                 explicit: room.name
@@ -65,12 +67,14 @@ mod.checkForRequiredCreeps = (flag) => {
     // count creeps assigned to task
     // if creep count below requirement spawn a new creep creep 
     if( count < 1 ) {
+        const definition = Task.pioneer.creep.pioneer;
         Task.spawn(
-            Task.pioneer.creep.pioneer, // creepDefinition
+            definition, // creepDefinition
             { // destiny
                 task: 'pioneer', // taskName
                 targetName: flag.name, // targetName
-                flagName: flag.name // custom
+                flagName: flag.name, // custom
+                type: definition.behaviour,
             }, 
             { // spawn room selection params
                 targetRoom: flag.pos.roomName, 
@@ -100,16 +104,12 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         let memory = Task.pioneer.memory(flag);
         // save spawning creep to task memory
         memory.spawning.push(params);
+
         // clean/validate task memory queued creeps
-        let queued = []
-        let validateQueued = o => {
-            let room = Game.rooms[o.room];
-            if( (room.spawnQueueMedium.some( c => c.name == o.name)) || (room.spawnQueueLow.some( c => c.name == o.name)) ){
-                queued.push(o);
-            }
-        };
-        memory.queued.forEach(validateQueued);
-        memory.queued = queued;
+        const type = params.destiny.type;
+        // default to both as temporary migration
+        const priority = type ? _.find(Task.pioneer.creep, {behaviour: type}).queue : ['Low', 'Medium'];
+        Task.validateQueued(memory.queued, priority);
     }
 };
 // when a creep completed spawning
@@ -129,16 +129,7 @@ mod.handleSpawningCompleted = creep => {
         // save running creep to task memory
         memory.running.push(creep.name);
         // clean/validate task memory spawning creeps
-        let spawning = []
-        let validateSpawning = o => {
-            let spawn = Game.spawns[o.spawn];
-            if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
-                count++;
-                spawning.push(o);
-            }
-        };
-        memory.spawning.forEach(validateSpawning);
-        memory.spawning = spawning;
+        Task.validateSpawning(memory.spawning);
     }
 };
 // when a creep died (or will die soon)
@@ -151,26 +142,8 @@ mod.handleCreepDied = name => {
     // get flag which caused request of that creep
     let flag = Game.flags[mem.destiny.flagName];
     if (flag) {
-        // get task memory
         let memory = Task.pioneer.memory(flag);
-        // clean/validate task memory running creeps
-        let running = []
-        let validateRunning = o => {
-            // invalidate dead or old creeps for predicted spawning
-            let creep = Game.creeps[o];
-            // invalidate old creeps for predicted spawning
-            if( !creep || !creep.data ) return
-            // TODO: better distance calculation
-            let prediction;
-            if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
-            else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, flag.pos.roomName)*50));
-            else prediction = (routeRange(creep.data.homeRoom, flag.pos.roomName)+1) * 50;
-            if( creep.name != name && creep.ticksToLive > prediction ) {
-                running.push(o);
-            }
-        };
-        memory.running.forEach(validateRunning);
-        memory.running = running;
+        Task.validateRunning(memory.running, flag.pos.roomName, name);
     }
 };
 // get task memory
@@ -182,7 +155,7 @@ mod.memory = (flag) => {
             queued: [], 
             spawning: [],
             running: []
-        }
+        };
     }
     return flag.memory.tasks.pioneer;
 };
