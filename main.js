@@ -343,7 +343,7 @@ module.exports.loop = function () {
         totalUsage.totalCPU();
     }
     catch (e) {
-        console.log(e.Message);
+        console.log(e.message);
     }
 
 };
