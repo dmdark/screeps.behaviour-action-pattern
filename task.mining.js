@@ -41,7 +41,7 @@ mod.handleSpawningStarted = params => {
 
     // validate currently queued entries and clean out spawned creep
     const priority = _.find(Task.mining.creep, {behaviour: params.destiny.type}).queue;
-    Task.validateQueued(memory.queued[params.destiny.type], [priority]);
+    memory.queued[params.destiny.type] = Task.validateQueued(memory.queued[params.destiny.type], [priority]);
 
     if (params.body) params.body = _.countBy(params.body);
     // save spawning creep to task memory
@@ -94,7 +94,7 @@ mod.handleCreepDied = name => {
         return;
     // clean/validate task memory running creeps
     const memory = Task.mining.memory(mem.destiny.room);
-    Task.validateRunning(memory.running[mem.creepType], mem.destiny.room, name);
+    memory.running[mem.creepType] = Task.validateRunning(memory.running[mem.creepType], mem.destiny.room, name);
 };
 mod.needsReplacement = (creep) => {
     // this was used below in maxWeight, perhaps it's more accurate?

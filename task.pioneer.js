@@ -109,7 +109,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         const type = params.destiny.type;
         // default to both as temporary migration
         const priority = type ? _.find(Task.pioneer.creep, {behaviour: type}).queue : ['Low', 'Medium'];
-        Task.validateQueued(memory.queued, priority);
+        memory.queued = Task.validateQueued(memory.queued, priority);
     }
 };
 // when a creep completed spawning
@@ -129,7 +129,7 @@ mod.handleSpawningCompleted = creep => {
         // save running creep to task memory
         memory.running.push(creep.name);
         // clean/validate task memory spawning creeps
-        Task.validateSpawning(memory.spawning);
+        memory.spawning = Task.validateSpawning(memory.spawning);
     }
 };
 // when a creep died (or will die soon)
@@ -143,7 +143,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.flagName];
     if (flag) {
         let memory = Task.pioneer.memory(flag);
-        Task.validateRunning(memory.running, flag.pos.roomName, name);
+        memory.running = Task.validateRunning(memory.running, flag.pos.roomName, name);
     }
 };
 // get task memory

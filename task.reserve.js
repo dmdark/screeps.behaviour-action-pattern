@@ -93,7 +93,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory queued creeps
-        Task.validateQueued(memory.queued, ['Low', 'Medium']);
+        memory.queued = Task.validateQueued(memory.queued, ['Low', 'Medium']);
         // save spawning creep to task memory
         memory.spawning.push(params);
     }
@@ -112,7 +112,7 @@ mod.handleSpawningCompleted = creep => {
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory spawning creeps
-        Task.validateSpawning(memory.spawning);
+        memory.spawning = Task.validateSpawning(memory.spawning);
         // save running creep to task memory
         memory.running.push(creep.name);
     }
@@ -129,7 +129,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.targetName];
     if (flag) {
         let memory = Task.reserve.memory(flag);
-        Task.validateRunning(memory.running, flag.pos.roomName, name);
+        memory.running = Task.validateRunning(memory.running, flag.pos.roomName, name);
     }
 };
 mod.nextAction = creep => {
@@ -155,6 +155,11 @@ mod.nextAction = creep => {
     }
     if( DEBUG && TRACE ) trace('Task', {creepName:creep.name, nextAction:creep.action.name, [mod.name]: 'nextAction', Task:mod.name});
 };
+mod.validateMemory = (memory, roomName) => {
+    memory.queued = Task.validateQueued(memory.queued, ['Low', 'Medium']);
+    memory.spawning = Task.validateSpawning(memory.spawning);
+    memory.running = Task.validateRunning(memory.running, roomName);
+};
 // get task memory
 mod.memory = (flag) => {
     if( !flag.memory.tasks ) 
@@ -169,7 +174,7 @@ mod.memory = (flag) => {
     }
     let memory = flag.memory.tasks.reserve;
     if( !memory.valid || memory.valid < ( Game.time - MEMORY_RESYNC_INTERVAL ) )
-        Task.reserve.validateMemory(memory);
+        Task.reserve.validateMemory(memory, flag.pos.roomName);
     return memory;
 };
 mod.strategies = {

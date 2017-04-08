@@ -106,7 +106,7 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
     if( onQueued ) onQueued(creepSetup);
     return creepSetup;
 };
-mod.validateQueued = function(queued, queues = ['Low']) {
+mod.validateQueued = function(memory, queues = ['Low']) {
     let validated = [];
     const _validateQueued = entry => {
         const room = Game.rooms[entry.room];
@@ -114,10 +114,10 @@ mod.validateQueued = function(queued, queues = ['Low']) {
             validated.push(entry);
         }
     };
-    queued.forEach(_validateQueued);
-    queued = validated;
+    memory.forEach(_validateQueued);
+    return validated;
 };
-mod.validateSpawning = function(spawning) {
+mod.validateSpawning = function(memory) {
     let validated = [];
     const _validateSpawning = entry => {
         const spawn = Game.spawns[entry.spawn];
@@ -125,10 +125,10 @@ mod.validateSpawning = function(spawning) {
             validated.push(entry);
         }
     };
-    spawning.forEach(_validateSpawning);
-    spawning = validated;
+    memory.forEach(_validateSpawning);
+    return validated;
 };
-mod.validateRunning = function(running, roomName, deadCreep = '') {
+mod.validateRunning = function(memory, roomName, deadCreep = '') {
     let validated = [];
     const _validateRunning = name => {
         // invalidate dead or old creeps for predicted spawning
@@ -141,10 +141,10 @@ mod.validateRunning = function(running, roomName, deadCreep = '') {
         else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName) * 50));
         else prediction = (routeRange(creep.data.homeRoom, roomName) + 1) * 50;
         if( creep.name !== deadCreep && creep.ticksToLive > prediction ) {
-            validated.push(o);
+            validated.push(name);
         }
     };
-    running.forEach(validateRunning);
-    running = validated;
+    memory.forEach(_validateRunning);
+    return validated;
 };
 const cache = {};
