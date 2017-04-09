@@ -106,22 +106,28 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
     if( onQueued ) onQueued(creepSetup);
     return creepSetup;
 };
-mod.validateQueued = function(memory, queues = ['Low']) {
-    let validated = [];
-    const _validateQueued = entry => {
-        const room = Game.rooms[entry.room];
-        for (const queue of queues) {
-            if (room['spawnQueue' + queue].some(c => c.name === entry.name)) {
-                validated.push(entry);
-                break;
+mod.validateQueued = function(memory, options) {
+    // if checkValid = true, it will only revalidate if 50 ticks have passed since the last validation
+    if (!options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50) {
+        const queues = options.queues || ['Low'];
+        const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
+        const validated = [];
+        const _validateQueued = entry => {
+            const room = Game.rooms[entry.room];
+            for (const queue of queues) {
+                if (room['spawnQueue' + queue].some(c => c.name === entry.name)) {
+                    validated.push(entry);
+                    break;
+                }
             }
-        }
-    };
-    memory.forEach(_validateQueued);
-    return validated;
+        };
+        _.get(memory, subKey, []).forEach(_validateQueued);
+        _.set(memory, subKey, validated);
+        memory.queuedValid = Game.time;
+    }
 };
 mod.validateSpawning = function(memory) {
-    let validated = [];
+    const validated = [];
     const _validateSpawning = entry => {
         const spawn = Game.spawns[entry.spawn];
         if( spawn && ((spawn.spawning && spawn.spawning.name === entry.name) || (spawn.newSpawn && spawn.newSpawn.name === entry.name))) {
@@ -132,7 +138,7 @@ mod.validateSpawning = function(memory) {
     return validated;
 };
 mod.validateRunning = function(memory, roomName, deadCreep = '') {
-    let validated = [];
+    const validated = [];
     const _validateRunning = name => {
         // invalidate dead or old creeps for predicted spawning
         const creep = Game.creeps[name];

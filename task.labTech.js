@@ -26,8 +26,9 @@ mod.handleFlagFound = flag => {
 mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     const memory = Task.labTech.memory(flag);
+    // re-validate if too much time has passed
+    Task.validateQueued(memory, {checkValid: true});
     // count creeps assigned to task
-    
     const count = memory.queued.length + memory.spawning.length + memory.running.length;
     
     // if creep count below requirement spawn a new creep creep 
@@ -67,7 +68,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // save spawning creep to task memory
         memory.spawning.push(params);
         // clean/validate task memory queued creeps
-        memory.queued = Task.validateQueued(memory.queued);
+        Task.validateQueued(memory);
     }
 };
 // when a creep completed spawning

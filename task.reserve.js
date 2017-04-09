@@ -40,7 +40,9 @@ mod.checkForRequiredCreeps = (flag) => {
 
     // get task memory
     let memory = Task.reserve.memory(flag);
-
+    // clean/validate task memory queued creeps
+    Task.validateQueued(memory, {queues: ['Low', 'Medium'], checkValid: true});
+    
     // if low & creep in low queue => move to medium queue
     if( spawnParams.queue !== 'Low' && memory.queued.length == 1 ) {
         let spawnRoom = Game.rooms[memory.queued[0].room];
@@ -93,7 +95,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory queued creeps
-        memory.queued = Task.validateQueued(memory.queued, ['Low', 'Medium']);
+        Task.validateQueued(memory, {queues: ['Low', 'Medium']});
         // save spawning creep to task memory
         memory.spawning.push(params);
     }

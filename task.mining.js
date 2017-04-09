@@ -41,7 +41,7 @@ mod.handleSpawningStarted = params => {
 
     // validate currently queued entries and clean out spawned creep
     const priority = _.find(Task.mining.creep, {behaviour: params.destiny.type}).queue;
-    memory.queued[params.destiny.type] = Task.validateQueued(memory.queued[params.destiny.type], [priority]);
+    Task.validateQueued(memory, {subKey: params.destiny.type, queues: [priority]});
 
     if (params.body) params.body = _.countBy(params.body);
     // save spawning creep to task memory
@@ -118,9 +118,15 @@ mod.checkForRequiredCreeps = (flag) => {
     // never been there
     else sourceCount = 1;
 
+
+
     // do we need to validate our spawning entries?
     for (const type of ['remoteHauler', 'remoteMiner', 'remoteWorker']) {
-        if (memory.nextSpawnCheck[type] && Game.time > memory.nextSpawnCheck[type]) {
+            // re-validate if too much time has passed in the queue
+            const priority = _.find(Task.mining.creep, {behaviour: type}).queue;
+            Task.validateQueued(memory, {subKey: type, queues: [priority], checkValid: true});
+
+            if (memory.nextSpawnCheck[type] && Game.time > memory.nextSpawnCheck[type]) {
             if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
             Task.mining.validateSpawning(roomName, type);
         }

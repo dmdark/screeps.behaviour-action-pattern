@@ -18,6 +18,8 @@ mod.checkForRequiredCreeps = (flag) => {
     const room = Game.rooms[roomName];
     // get task memory
     let memory = Task.attackController.memory(flag);
+    // re-validate if too much time has passed
+    Task.validateQueued(memory, {checkValid: true});
     // count creeps assigned to task
     let count = memory.queued.length + memory.spawning.length + memory.running.length;
     // if creep count below requirement spawn a new creep creep
@@ -41,7 +43,6 @@ mod.checkForRequiredCreeps = (flag) => {
             }
         );
     }
-
 };
 // when a creep starts spawning
 mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: creep.name, destiny: creep.destiny}
@@ -57,7 +58,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         memory.spawning.push(params);
 
         // clean/validate task memory queued creeps
-        memory.queued = Task.validateQueued(memory.queued);
+        Task.validateQueued(memory);
     }
 };
 // when a creep completed spawning

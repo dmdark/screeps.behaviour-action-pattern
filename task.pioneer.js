@@ -36,7 +36,7 @@ mod.handleRoomDied = room => {
             room.createFlag(pos, null, FLAG_COLOR.claim.pioneer.color, FLAG_COLOR.claim.pioneer.secondaryColor);
         }
     }
-}
+};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a pioneer single or spawn
@@ -61,6 +61,9 @@ mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     let memory = Task.pioneer.memory(flag);
 
+    // re-validate if too much time has passed in the queue
+    Task.validateQueued(memory, {checkValid:true});
+    
     // decide number of pioneers required
     let count = memory.queued.length + memory.spawning.length + memory.running.length;
         
@@ -108,8 +111,8 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // clean/validate task memory queued creeps
         const type = params.destiny.type;
         // default to both as temporary migration
-        const priority = type ? _.find(Task.pioneer.creep, {behaviour: type}).queue : ['Low', 'Medium'];
-        memory.queued = Task.validateQueued(memory.queued, priority);
+        const priority = type ? _.find(Task.pioneer.creep, {behaviour: type}).queue : ['Low', 'High'];
+        Task.validateQueued(memory, {queues: [priority]});
     }
 };
 // when a creep completed spawning
