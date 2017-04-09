@@ -157,11 +157,6 @@ mod.nextAction = creep => {
     }
     if( DEBUG && TRACE ) trace('Task', {creepName:creep.name, nextAction:creep.action.name, [mod.name]: 'nextAction', Task:mod.name});
 };
-mod.validateMemory = (memory, roomName) => {
-    memory.queued = Task.validateQueued(memory.queued, ['Low', 'Medium']);
-    memory.spawning = Task.validateSpawning(memory.spawning);
-    memory.running = Task.validateRunning(memory.running, roomName);
-};
 // get task memory
 mod.memory = (flag) => {
     if( !flag.memory.tasks ) 
@@ -174,10 +169,7 @@ mod.memory = (flag) => {
             running: []
         };
     }
-    let memory = flag.memory.tasks.reserve;
-    if( !memory.valid || memory.valid < ( Game.time - MEMORY_RESYNC_INTERVAL ) )
-        Task.reserve.validateMemory(memory, flag.pos.roomName);
-    return memory;
+    return flag.memory.tasks.reserve;
 };
 mod.strategies = {
     defaultStrategy: {

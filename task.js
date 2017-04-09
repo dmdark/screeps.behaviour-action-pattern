@@ -106,11 +106,12 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
     if( onQueued ) onQueued(creepSetup);
     return creepSetup;
 };
-mod.validateQueued = function(memory, options) {
+mod.validateQueued = function(memory, options = {}) {
+    const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
+    const queued = Util.get(memory, subKey, []);
     // if checkValid = true, it will only revalidate if 50 ticks have passed since the last validation
-    if (!options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50) {
+    if (queued.length && !options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50) {
         const queues = options.queues || ['Low'];
-        const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
         const validated = [];
         const _validateQueued = entry => {
             const room = Game.rooms[entry.room];
@@ -121,7 +122,7 @@ mod.validateQueued = function(memory, options) {
                 }
             }
         };
-        _.get(memory, subKey, []).forEach(_validateQueued);
+        queued.forEach(_validateQueued);
         _.set(memory, subKey, validated);
         memory.queuedValid = Game.time;
     }
