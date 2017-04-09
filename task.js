@@ -127,34 +127,46 @@ mod.validateQueued = function(memory, options = {}) {
         memory.queuedValid = Game.time;
     }
 };
-mod.validateSpawning = function(memory) {
-    const validated = [];
-    const _validateSpawning = entry => {
-        const spawn = Game.spawns[entry.spawn];
-        if( spawn && ((spawn.spawning && spawn.spawning.name === entry.name) || (spawn.newSpawn && spawn.newSpawn.name === entry.name))) {
-            validated.push(entry);
-        }
-    };
-    memory.forEach(_validateSpawning);
-    return validated;
+mod.validateSpawning = function(memory, options = {}) {
+    const subKey = options.subKey ? 'spawning.' + options.subKey : 'spawning';
+    const spawning = Util.get(memory, subKey, []);
+    if (spawning.length) {
+        const validated = [];
+        const _validateSpawning = entry => {
+            const spawn = Game.spawns[entry.spawn];
+            if( spawn && ((spawn.spawning && spawn.spawning.name === entry.name) || (spawn.newSpawn && spawn.newSpawn.name === entry.name))) {
+                validated.push(entry);
+            }
+        };
+        spawning.forEach(_validateSpawning);
+        _.set(memory, subKey, validated);
+        memory.spawningValid = Game.time;
+    }
 };
-mod.validateRunning = function(memory, roomName, deadCreep = '') {
-    const validated = [];
-    const _validateRunning = name => {
-        // invalidate dead or old creeps for predicted spawning
-        const creep = Game.creeps[name];
-        // invalidate old creeps for predicted spawning
-        if( !creep || !creep.data ) return;
-        // TODO: better distance calculation
-        let prediction;
-        if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
-        else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName) * 50));
-        else prediction = (routeRange(creep.data.homeRoom, roomName) + 1) * 50;
-        if( creep.name !== deadCreep && creep.ticksToLive > prediction ) {
-            validated.push(name);
-        }
-    };
-    memory.forEach(_validateRunning);
-    return validated;
+mod.validateRunning = function(memory, options = {}) {
+    const subKey = options.subKey ? 'running.' + options.subKey : 'running';
+    const running = Util.get(memory, subKey, []);
+    const roomName = options.roomName;
+    if (roomName && running.length) {
+        const deadCreep = options.deadCreep || '';
+        const validated = [];
+        const _validateRunning = name => {
+            // invalidate dead or old creeps for predicted spawning
+            const creep = Game.creeps[name];
+            // invalidate old creeps for predicted spawning
+            if( !creep || !creep.data ) return;
+            // TODO: better distance calculation
+            let prediction;
+            if( creep.data.predictedRenewal ) prediction = creep.data.predictedRenewal;
+            else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName) * 50));
+            else prediction = (routeRange(creep.data.homeRoom, roomName) + 1) * 50;
+            if( creep.name !== deadCreep && creep.ticksToLive > prediction ) {
+                validated.push(name);
+            }
+        };
+        running.forEach(_validateRunning);
+        _.set(memory, subKey, validated);
+        memory.runningValid = Game.time;
+    }
 };
 const cache = {};

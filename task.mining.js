@@ -94,7 +94,7 @@ mod.handleCreepDied = name => {
         return;
     // clean/validate task memory running creeps
     const memory = Task.mining.memory(mem.destiny.room);
-    memory.running[mem.creepType] = Task.validateRunning(memory.running[mem.creepType], mem.destiny.room, name);
+    Task.validateRunning(memory, {subKey: mem.creepType, roomName: mem.destiny.room, deadCreep: name});
 };
 mod.needsReplacement = (creep) => {
     // this was used below in maxWeight, perhaps it's more accurate?
@@ -142,7 +142,7 @@ mod.checkForRequiredCreeps = (flag) => {
         if (invalidEntry) {
             if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
             const memory = Task.mining.memory(roomName);
-            Task.validateRunning(memory.running[type], roomName);
+            Task.validateRunning(memory, {subKey: type, roomName});
             running = _.map(memory.running[type], n => Game.creeps[n]);
         }
         const runningCount = _.filter(running, c => !Task.mining.needsReplacement(c)).length;

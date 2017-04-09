@@ -132,7 +132,7 @@ mod.handleSpawningCompleted = creep => {
         // save running creep to task memory
         memory.running.push(creep.name);
         // clean/validate task memory spawning creeps
-        memory.spawning = Task.validateSpawning(memory.spawning);
+        Task.validateSpawning(memory);
     }
 };
 // when a creep died (or will die soon)
@@ -146,7 +146,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.flagName];
     if (flag) {
         let memory = Task.pioneer.memory(flag);
-        memory.running = Task.validateRunning(memory.running, flag.pos.roomName, name);
+        Task.validateRunning(memory, {roomName: flag.pos.roomName, deadCreep: name});
     }
 };
 // get task memory
