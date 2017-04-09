@@ -110,8 +110,11 @@ mod.validateQueued = function(memory, queues = ['Low']) {
     let validated = [];
     const _validateQueued = entry => {
         const room = Game.rooms[entry.room];
-        if (_(queues).map(q => room['spawnQueue' + q]).some(c => c.name === entry.name)) {
-            validated.push(entry);
+        for (const queue of queues) {
+            if (room['spawnQueue' + queue].some(c => c.name === entry.name)) {
+                validated.push(entry);
+                break;
+            }
         }
     };
     memory.forEach(_validateQueued);
