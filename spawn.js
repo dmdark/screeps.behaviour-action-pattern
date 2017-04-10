@@ -48,7 +48,7 @@ mod.extend = function(){
             else params = queue.splice(index, 1)[0];
         }
         if (!params) {
-            if (DEBUG) global.logSystem(this.pos.roomName, 'No non-CRITICAL creeps to spawn, delaying spawn until CPU is not CRITICAL, or new entries are added.');
+            if (queue.length && DEBUG) global.logSystem(this.pos.roomName, 'No non-CRITICAL creeps to spawn, delaying spawn until CPU is not CRITICAL, or new entries are added.');
             spawnDelay[level] = queue.length;
             return null;
         }
