@@ -18,14 +18,14 @@ mod.extend = function(){
             return setup.isValidSetup(room) && that.createCreepBySetup(setup);
         };
 
-        let busy = this.createCreepByQueue(room.spawnQueueHigh, 'high');
+        let busy = this.createCreepByQueue(room.spawnQueueHigh, 'High');
         // don't spawn lower if there is one waiting in the higher queue 
         if( !busy && room.spawnQueueHigh.length == 0 && Game.time % SPAWN_INTERVAL == 0 ) {
             busy = _.some(Spawn.priorityHigh, probe);
-            if( !busy ) busy = this.createCreepByQueue(room.spawnQueueMedium, 'medium');
+            if( !busy ) busy = this.createCreepByQueue(room.spawnQueueMedium, 'Medium');
             if( !busy && room.spawnQueueMedium.length == 0 ) {
                 busy = _.some(Spawn.priorityLow, probe);
-                if( !busy ) busy = this.createCreepByQueue(room.spawnQueueLow, 'low');
+                if( !busy ) busy = this.createCreepByQueue(room.spawnQueueLow, 'Low');
             }
         }
         return busy;
@@ -39,6 +39,7 @@ mod.extend = function(){
     };
     Spawn.prototype.createCreepByQueue = function(queue, level){
         if (!queue) return null;
+        else if (_.isUndefined(this.memory.spawnDelay)) this.memory.spawnDelay = {};
         else if (Memory.CPU_CRITICAL && this.memory.spawnDelay[level] === queue.length) return null;
         let params;
         for (const index in queue) {
