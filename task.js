@@ -110,7 +110,7 @@ mod.validateQueued = function(memory, options = {}) {
     const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
     const queued = Util.get(memory, subKey, []);
     // if checkValid = true, it will only revalidate if 50 ticks have passed since the last validation
-    if (queued.length && !options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50) {
+    if (queued.length && (!options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50)) {
         const queues = options.queues || ['Low'];
         const validated = [];
         const _validateQueued = entry => {
