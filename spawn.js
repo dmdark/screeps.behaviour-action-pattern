@@ -44,7 +44,7 @@ mod.extend = function(){
         let params;
         for (const index in queue) {
             const entry = queue[index];
-            if (Memory.CPU_CRITICAL && CRITICAL_ROLES.includes(entry.behaviour)) continue;
+            if (Memory.CPU_CRITICAL && !CRITICAL_ROLES.includes(entry.behaviour)) continue;
             else params = queue.splice(index, 1)[0];
         }
         if (!params) {
