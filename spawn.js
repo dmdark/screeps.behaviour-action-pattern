@@ -38,9 +38,9 @@ mod.extend = function(){
         return null;
     };
     Spawn.prototype.createCreepByQueue = function(queue, level){
+        const spawnDelay = Util.get(this.room.memory, 'spawnDelay', {});
         if (!queue) return null;
-        else if (_.isUndefined(this.memory.spawnDelay)) this.memory.spawnDelay = {};
-        else if (Memory.CPU_CRITICAL && this.memory.spawnDelay[level] === queue.length) return null;
+        else if (Memory.CPU_CRITICAL && spawnDelay[level] === queue.length) return null;
         let params;
         for (const index in queue) {
             const entry = queue[index];
@@ -48,11 +48,11 @@ mod.extend = function(){
             else params = queue.splice(index, 1)[0];
         }
         if (!params) {
-            global.logSystem(this.pos.roomName, dye(CRAYON.error, 'Delaying spawn until CPU is not CRITICAL, or new entries are added.' ));
-            this.memory.spawnDelay[level] = queue.length;
+            if (DEBUG) global.logSystem(this.pos.roomName, dye(CRAYON.error, 'Delaying spawn until CPU is not CRITICAL, or new entries are added.' ));
+            spawnDelay[level] = queue.length;
             return null;
         }
-        delete this.memory.spawnDelay[level];
+        delete spawnDelay[level];
         let cost = 0;
         params.parts.forEach(function(part){
             cost += BODYPART_COST[part];
