@@ -173,7 +173,7 @@ mod.validateRunning = function(memory, options = {}) {
         };
         running.forEach(_validateRunning);
         _.set(memory, subKey, validated);
-        memory[check] = minTTL ? Game.time + minRemaining : 0;
+        memory[check] = minRemaining ? Game.time + minRemaining : 0;
     }
 };
 mod.validateAll = function(memory, options = {}) {
