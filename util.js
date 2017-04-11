@@ -393,7 +393,7 @@ module.exports = {
     inQueue(opts) {
         if (!opts) return false;
         // string check
-        if ('link' in opts) opts = {behaviour: opts};
+        if (opts.link) opts = {behaviour: opts};
         if (!opts.name && !opts.behaviour && !opts.setup) return false;
         return _(Game.rooms).filter('my').map('memory').map(m => m.spawnQueueHigh.concat(m.spawnQueueMedium, m.spawnQueueLow)).flatten().some(q => {
             if (opts.room) if (q.destiny && q.destiny.room !== opts.room) return false;
