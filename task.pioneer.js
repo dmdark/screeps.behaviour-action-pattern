@@ -62,7 +62,7 @@ mod.checkForRequiredCreeps = (flag) => {
     let memory = Task.pioneer.memory(flag);
 
     // re-validate if too much time has passed in the queue
-    Task.validateAll(memory, {roomName: flag.pos.roomName, subKey: type, checkValid: true});
+    Task.validateAll(memory, {roomName: flag.pos.roomName, subKey: 'pioneer', checkValid: true});
     
     // decide number of pioneers required
     let count = memory.queued.length + memory.spawning.length + memory.running.length;

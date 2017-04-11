@@ -101,13 +101,13 @@ mod.checkForRequiredCreeps = (flag) => {
     else sourceCount = 1;
 
     const countExisting = type => {
-        Task.validateAll(memory, {roomName, subKey: type, checkValid: true});
+        const priority = _.find(Task.mining.creep, {behaviour: type}).queue;
+        Task.validateAll(memory, {roomName, subKey: type, queues: [priority], checkValid: true});
         return memory.queued[type].length + memory.spawning[type].length + memory.running[type].length;
     };
     const haulerCount = countExisting('remoteHauler');
     const minerCount = countExisting('remoteMiner');
     const workerCount = countExisting('remoteWorker');
-
     // TODO: calculate creeps by type needed per source / mineral
 
     if( DEBUG && TRACE ) trace('Task', {Task:mod.name, flagName:flag.name, sourceCount, haulerCount, minerCount, workerCount, [mod.name]:'Flag.found'}, 'checking flag@', flag.pos);
@@ -115,7 +115,6 @@ mod.checkForRequiredCreeps = (flag) => {
     if(minerCount < sourceCount) {
         if( DEBUG && TRACE ) trace('Task', {Task:mod.name, room:roomName, minerCount,
             minerTTLs: _.map(_.map(memory.running.remoteMiner, n=>Game.creeps[n]), "ticksToLive"), [mod.name]:'minerCount'});
-
         const miner = mod.strategies.miner.setup(roomName);
         for(let i = minerCount; i < sourceCount; i++) {
             Task.spawn(
