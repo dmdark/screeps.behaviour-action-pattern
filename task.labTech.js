@@ -27,7 +27,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     const memory = Task.labTech.memory(flag);
     // re-validate if too much time has passed
-    Task.validateQueued(memory, {checkValid: true});
+    Task.validateAll(memory, {roomName: flag.pos.roomName, checkValid: true});
     // count creeps assigned to task
     const count = memory.queued.length + memory.spawning.length + memory.running.length;
     

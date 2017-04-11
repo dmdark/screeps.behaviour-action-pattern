@@ -41,7 +41,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     let memory = Task.reserve.memory(flag);
     // clean/validate task memory queued creeps
-    Task.validateQueued(memory, {queues: ['Low', 'Medium'], checkValid: true});
+    Task.validateAll(memory, {roomName: flag.pos.roomName, queues: ['Low', 'Medium'], checkValid: true});
     
     // if low & creep in low queue => move to medium queue
     if( spawnParams.queue !== 'Low' && memory.queued.length == 1 ) {

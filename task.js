@@ -108,9 +108,10 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
 };
 mod.validateQueued = function(memory, options = {}) {
     const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
+    const check = options.subKey ? 'nextQueuedCheck' + options.subKey : 'nextQueuedCheck';
     const queued = Util.get(memory, subKey, []);
     // if checkValid = true, it will only revalidate if 50 ticks have passed since the last validation
-    if (queued.length && (!options.checkValid || !memory.queuedValid || Game.time - memory.queuedValid > 50)) {
+    if (queued.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {
         const queues = options.queues || ['Low'];
         const validated = [];
         const _validateQueued = entry => {
@@ -124,32 +125,37 @@ mod.validateQueued = function(memory, options = {}) {
         };
         queued.forEach(_validateQueued);
         _.set(memory, subKey, validated);
-        memory.queuedValid = Game.time;
+        memory[check] = Game.time + 50;
     }
 };
 mod.validateSpawning = function(memory, options = {}) {
     const subKey = options.subKey ? 'spawning.' + options.subKey : 'spawning';
+    const check = options.subKey ? 'nextSpawnCheck' + options.subKey : 'nextSpawnCheck';
     const spawning = Util.get(memory, subKey, []);
-    if (spawning.length) {
+    if (spawning.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {
         const validated = [];
+        let minRemaining;
         const _validateSpawning = entry => {
             const spawn = Game.spawns[entry.spawn];
             if( spawn && ((spawn.spawning && spawn.spawning.name === entry.name) || (spawn.newSpawn && spawn.newSpawn.name === entry.name))) {
+                minRemaining = (!minRemaining || spawn.spawning.remainingTime < minRemaining) ? spawn.spawning.remainingTime : minRemaining;
                 validated.push(entry);
             }
         };
         spawning.forEach(_validateSpawning);
         _.set(memory, subKey, validated);
-        memory.spawningValid = Game.time;
+        memory[check] = minRemaining ? Game.time + minRemaining: 0;
     }
 };
 mod.validateRunning = function(memory, options = {}) {
     const subKey = options.subKey ? 'running.' + options.subKey : 'running';
+    const check = options.subKey ? 'nextRunningCheck' + options.subKey : 'nextRunningCheck';
     const running = Util.get(memory, subKey, []);
     const roomName = options.roomName;
-    if (roomName && running.length) {
+    if (roomName && running.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {
         const deadCreep = options.deadCreep || '';
         const validated = [];
+        let minRemaining;
         const _validateRunning = name => {
             // invalidate dead or old creeps for predicted spawning
             const creep = Game.creeps[name];
@@ -161,12 +167,19 @@ mod.validateRunning = function(memory, options = {}) {
             else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName) * 50));
             else prediction = (routeRange(creep.data.homeRoom, roomName) + 1) * 50;
             if( creep.name !== deadCreep && creep.ticksToLive > prediction ) {
+                minRemaining = (!minRemaining || creep.ticksToLive < minRemaining) ? creep.ticksToLive : minRemaining;
                 validated.push(name);
             }
         };
         running.forEach(_validateRunning);
         _.set(memory, subKey, validated);
-        memory.runningValid = Game.time;
+        memory[check] = minTTL ? Game.time + minRemaining : 0;
     }
+};
+mod.validateAll = function(memory, options = {}) {
+    if (_.isUndefined(options.roomName)) return logError('Task.validateAll', 'roomName undefined');
+    mod.validateQueued(memory, options);
+    mod.validateSpawning(memory, options);
+    mod.validateRunning(memory, options);
 };
 const cache = {};
