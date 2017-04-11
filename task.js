@@ -127,7 +127,7 @@ mod.validateQueued = function(memory, options = {}) {
         _.set(memory, subKey, validated);
         _.set(memory, checkPath, Game.time + 50);
     } else {
-        if (options.subKey) delete memory.nextQueuedCheck[options.subKey];
+        if (options.subKey && memory.nextQueuedCheck) delete memory.nextQueuedCheck[options.subKey];
         else delete memory.nextQueuedCheck;
     }
 };
@@ -149,7 +149,7 @@ mod.validateSpawning = function(memory, options = {}) {
         _.set(memory, subKey, validated);
         if (minRemaining) _.set(memory, checkPath, Game.time + minRemaining);
         else {
-            if (options.subKey) delete memory.nextSpawnCheck[options.subKey];
+            if (options.subKey && memory.nextSpawnCheck) delete memory.nextSpawnCheck[options.subKey];
             else delete memory.nextSpawnCheck;
         }
     }
@@ -182,7 +182,7 @@ mod.validateRunning = function(memory, options = {}) {
         _.set(memory, subKey, validated);
         if (minRemaining) _.set(memory, checkPath, Game.time + minRemaining);
         else {
-            if (options.subKey) delete memory.nextRunningCheck[options.subKey];
+            if (options.subKey && memory.nextRunningCheck) delete memory.nextRunningCheck[options.subKey];
             else delete memory.nextRunningCheck;
         }
     }
