@@ -108,7 +108,7 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
 };
 mod.validateQueued = function(memory, options = {}) {
     const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
-    const check = options.subKey ? 'nextQueuedCheck' + options.subKey : 'nextQueuedCheck';
+    const check = options.subKey ? 'nextQueuedCheck.' + options.subKey : 'nextQueuedCheck';
     const queued = Util.get(memory, subKey, []);
     // if checkValid = true, it will only revalidate if 50 ticks have passed since the last validation
     if (queued.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {
@@ -130,7 +130,7 @@ mod.validateQueued = function(memory, options = {}) {
 };
 mod.validateSpawning = function(memory, options = {}) {
     const subKey = options.subKey ? 'spawning.' + options.subKey : 'spawning';
-    const check = options.subKey ? 'nextSpawnCheck' + options.subKey : 'nextSpawnCheck';
+    const check = options.subKey ? 'nextSpawnCheck.' + options.subKey : 'nextSpawnCheck';
     const spawning = Util.get(memory, subKey, []);
     if (spawning.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {
         const validated = [];
@@ -149,7 +149,7 @@ mod.validateSpawning = function(memory, options = {}) {
 };
 mod.validateRunning = function(memory, options = {}) {
     const subKey = options.subKey ? 'running.' + options.subKey : 'running';
-    const check = options.subKey ? 'nextRunningCheck' + options.subKey : 'nextRunningCheck';
+    const check = options.subKey ? 'nextRunningCheck.' + options.subKey : 'nextRunningCheck';
     const running = Util.get(memory, subKey, []);
     const roomName = options.roomName;
     if (roomName && running.length && (!options.checkValid || Game.time > _.get(memory[check], 0))) {

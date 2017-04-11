@@ -51,24 +51,6 @@ mod.handleSpawningStarted = params => {
     const nextCheck = memory.nextSpawnCheck[params.destiny.type];
     if (!nextCheck || (Game.time + params.spawnTime) < nextCheck) memory.nextSpawnCheck[params.destiny.type] = Game.time + params.spawnTime + 1;
 };
-mod.validateSpawning = (roomName, type) => {
-    const memory = Task.mining.memory(roomName);
-    const spawning = [];
-    let minRemaining;
-    const _validateSpawning = o => {
-        const spawn = Game.spawns[o.spawn];
-        if( spawn && ((spawn.spawning && spawn.spawning.name == o.name) || (spawn.newSpawn && spawn.newSpawn.name == o.name))) {
-            minRemaining = (!minRemaining || spawn.spawning.remainingTime < minRemaining) ? spawn.spawning.remainingTime : minRemaining;
-            spawning.push(o);
-        }
-    };
-    if (memory.spawning[type]) {
-        memory.spawning[type].forEach(_validateSpawning);
-    }
-    memory.spawning[type] = spawning;
-    // if we get to this tick without nextCheck getting updated (by handleSpawningCompleted) we need to validate again, it might be stuck.
-    memory.nextSpawnCheck[type] = minRemaining ? Game.time + minRemaining : 0;
-};
 mod.handleSpawningCompleted = creep => {
     if ( !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != mod.name )
         return;
@@ -83,7 +65,7 @@ mod.handleSpawningCompleted = creep => {
     // save running creep to task memory
     memory.running[creep.data.destiny.type].push(creep.name);
     // clean/validate task memory spawning creeps
-    Task.mining.validateSpawning(creep.data.destiny.room, creep.data.destiny.type);
+    Task.validateSpawning(memory, {roomName: creep.data.destiny.room, subKey: creep.data.destiny.type});
 };
 // when a creep died (or will die soon)
 mod.handleCreepDied = name => {
@@ -118,37 +100,10 @@ mod.checkForRequiredCreeps = (flag) => {
     // never been there
     else sourceCount = 1;
 
-
-
-    // do we need to validate our spawning entries?
-    for (const type of ['remoteHauler', 'remoteMiner', 'remoteWorker']) {
-            // re-validate if too much time has passed in the queue
-            const priority = _.find(Task.mining.creep, {behaviour: type}).queue;
-            Task.validateQueued(memory, {subKey: type, queues: [priority], checkValid: true});
-
-            if (memory.nextSpawnCheck[type] && Game.time > memory.nextSpawnCheck[type]) {
-            if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
-            Task.mining.validateSpawning(roomName, type);
-        }
-    }
-
     const countExisting = type => {
-        let invalidEntry = false;
-        let running = _.map(memory.running[type], n => {
-            const c = Game.creeps[n];
-            if (!c) invalidEntry = true;
-            return c;
-        });
-        if (invalidEntry) {
-            if( DEBUG && TRACE ) trace('Task', {Task:mod.name, roomName, flagName:flag.name, [mod.name]:'Flag.found', 'Flag.found':'revalidating', revalidating:type});
-            const memory = Task.mining.memory(roomName);
-            Task.validateRunning(memory, {subKey: type, roomName});
-            running = _.map(memory.running[type], n => Game.creeps[n]);
-        }
-        const runningCount = _.filter(running, c => !Task.mining.needsReplacement(c)).length;
-        return memory.queued[type].length + memory.spawning[type].length + runningCount;
+        Task.validateAll(memory, {roomName, subKey: type});
+        return memory.queued[type].length + memory.spawning[type].length + memory.running[type].length;
     };
-
     const haulerCount = countExisting('remoteHauler');
     const minerCount = countExisting('remoteMiner');
     const workerCount = countExisting('remoteWorker');
