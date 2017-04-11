@@ -101,7 +101,7 @@ mod.checkForRequiredCreeps = (flag) => {
     else sourceCount = 1;
 
     const countExisting = type => {
-        Task.validateAll(memory, {roomName, subKey: type});
+        Task.validateAll(memory, {roomName, subKey: type, checkValid: true});
         return memory.queued[type].length + memory.spawning[type].length + memory.running[type].length;
     };
     const haulerCount = countExisting('remoteHauler');
