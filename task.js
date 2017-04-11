@@ -125,8 +125,8 @@ mod.validateQueued = function(memory, options = {}) {
         };
         queued.forEach(_validateQueued);
         _.set(memory, subKey, validated);
-        _.set(memory, checkPath, Game.time + 50);
-    } else {
+        Util.set(memory, checkPath, Game.time + 50, false);
+    } else if (queued.length === 0) {
         if (options.subKey && memory.nextQueuedCheck) delete memory.nextQueuedCheck[options.subKey];
         else delete memory.nextQueuedCheck;
     }
@@ -147,7 +147,7 @@ mod.validateSpawning = function(memory, options = {}) {
         };
         spawning.forEach(_validateSpawning);
         _.set(memory, subKey, validated);
-        if (minRemaining) _.set(memory, checkPath, Game.time + minRemaining);
+        if (minRemaining) Util.set(memory, checkPath, Game.time + minRemaining, false);
         else {
             if (options.subKey && memory.nextSpawnCheck) delete memory.nextSpawnCheck[options.subKey];
             else delete memory.nextSpawnCheck;
@@ -180,7 +180,7 @@ mod.validateRunning = function(memory, options = {}) {
         };
         running.forEach(_validateRunning);
         _.set(memory, subKey, validated);
-        if (minRemaining) _.set(memory, checkPath, Game.time + minRemaining);
+        if (minRemaining) Util.set(memory, checkPath, Game.time + minRemaining, false);
         else {
             if (options.subKey && memory.nextRunningCheck) delete memory.nextRunningCheck[options.subKey];
             else delete memory.nextRunningCheck;
