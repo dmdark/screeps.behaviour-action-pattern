@@ -115,6 +115,7 @@ mod.validateQueued = function(memory, options = {}) {
         const queues = options.queues || ['Low'];
         const validated = [];
         const _validateQueued = entry => {
+            if (!entry) return;
             const room = Game.rooms[entry.room];
             for (const queue of queues) {
                 if (room['spawnQueue' + queue].some(c => c.name === entry.name)) {
@@ -139,6 +140,7 @@ mod.validateSpawning = function(memory, options = {}) {
         const validated = [];
         let minRemaining;
         const _validateSpawning = entry => {
+            if (!entry) return;
             const spawn = Game.spawns[entry.spawn];
             if( spawn && ((spawn.spawning && spawn.spawning.name === entry.name) || (spawn.newSpawn && spawn.newSpawn.name === entry.name))) {
                 minRemaining = (!minRemaining || spawn.spawning.remainingTime < minRemaining) ? spawn.spawning.remainingTime : minRemaining;
@@ -164,6 +166,7 @@ mod.validateRunning = function(memory, options = {}) {
         const validated = [];
         let minRemaining;
         const _validateRunning = name => {
+            if (!name) return;
             // invalidate dead or old creeps for predicted spawning
             const creep = Game.creeps[name];
             // invalidate old creeps for predicted spawning
