@@ -116,9 +116,12 @@ global.install = () => {
     // ensure required memory namespaces
     if (Memory.modules === undefined)  {
         Memory.modules = {
+            valid: Game.time,
             viral: {},
             internalViral: {}
         };
+    } else if (_.isUndefined(Memory.modules.valid)) {
+        Memory.modules.valid = Game.time;
     }
     // Initialize global & parameters
     //let glob = load("global");
@@ -137,7 +140,7 @@ global.install = () => {
         Events: load('events'),
         OCSMemory: load('ocsMemory'),
         Grafana: GRAFANA ? load('grafana') : undefined,
-        Visuals: ROOM_VISUALS ? load('visuals') : undefined,
+        Visuals: load('visuals'),
     });
     _.assign(global.Util, {
         DiamondIterator: load('util.diamond.iterator'),
@@ -161,6 +164,7 @@ global.install = () => {
         action: {
             attackController: load("creep.action.attackController"),
             avoiding: load("creep.action.avoiding"),
+            boosting: load("creep.action.boosting"),
             building: load("creep.action.building"),
             bulldozing: load('creep.action.bulldozing'),
             charging: load("creep.action.charging"),
@@ -229,11 +233,12 @@ global.install = () => {
     Spawn.extend();
     FlagDir.extend();
     Task.populate();
-    
-    if (ROOM_VISUALS) Visuals.extend();
+    Visuals.extend();
     // custom extend
     if( global.mainInjection.extend ) global.mainInjection.extend();
     OCSMemory.activateSegment(MEM_SEGMENTS.COSTMATRIX_CACHE, true);
+
+    global.modulesValid = Memory.modules.valid;
     if (DEBUG) logSystem('Global.install', 'Code reloaded.');
 };
 global.install();
@@ -244,13 +249,13 @@ module.exports.loop = function () {
     const cpuAtLoop = Game.cpu.getUsed();
     if (Memory.pause) return;
     const totalUsage = Util.startProfiling('main', {startCPU: cpuAtLoop});
-    const p = Util.startProfiling('main', {enabled: PROFILING.MAIN});
+    const p = Util.startProfiling('main', {enabled: PROFILING.MAIN, startCPU: cpuAtLoop});
     p.checkCPU('deserialize memory', 5); // the profiler makes an access to memory on startup
     // let the cpu recover a bit above the threshold before disengaging to prevent thrashing
     Memory.CPU_CRITICAL = Memory.CPU_CRITICAL ? Game.cpu.bucket < CRITICAL_BUCKET_LEVEL + CRITICAL_BUCKET_OVERFILL : Game.cpu.bucket < CRITICAL_BUCKET_LEVEL;
     if (!cpuAtFirstLoop) cpuAtFirstLoop = cpuAtLoop;
     // ensure required memory namespaces
-    if (Memory.modules === undefined)  {
+    if (_.isUndefined(Memory.modules) || _.isUndefined(global.modulesValid) || global.modulesValid !== Memory.modules.valid)  {
         global.install();
     }
     if (Memory.debugTrace === undefined) {
@@ -315,10 +320,12 @@ module.exports.loop = function () {
     if( global.mainInjection.execute ) global.mainInjection.execute();
 
     // Postprocessing
-    if( !Memory.statistics || ( Memory.statistics.tick && Memory.statistics.tick + TIME_REPORT <= Game.time ))
-        load("statistics").process();
-    processReports();
-    p.checkCPU('processReports', PROFILING.FLUSH_LIMIT);
+    if (SEND_STATISTIC_REPORTS) {
+        if( !Memory.statistics || ( Memory.statistics.tick && Memory.statistics.tick + TIME_REPORT <= Game.time ))
+            load("statistics").process();
+        processReports();
+      p.checkCPU('processReports', PROFILING.FLUSH_LIMIT);
+    }
     FlagDir.cleanup();
     p.checkCPU('FlagDir.cleanup', PROFILING.FLUSH_LIMIT);
     Population.cleanup();
@@ -330,7 +337,7 @@ module.exports.loop = function () {
 
     OCSMemory.cleanup(); // must come last
     p.checkCPU('OCSMemory.cleanup', PROFILING.ANALYZE_LIMIT);
-    if ( ROOM_VISUALS && !Memory.CPU_CRITICAL && Visuals ) Visuals.run(); // At end to correctly display used CPU.
+    if (ROOM_VISUALS && !Memory.CPU_CRITICAL) Visuals.run(); // At end to correctly display used CPU.
     p.checkCPU('visuals', PROFILING.EXECUTE_LIMIT);
 
     if ( GRAFANA && Game.time % GRAFANA_INTERVAL === 0 ) Grafana.run();

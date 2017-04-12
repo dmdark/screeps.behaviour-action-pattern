@@ -108,8 +108,12 @@ let Action = function(actionName){
         return false;
     };
     // assignment postprocessing
-    // needs implementation in derived action
-    this.onAssignment = (creep, target) => {};
+    this.onAssignment = function(creep, target) {
+        if (SAY_ASSIGNMENT) creep.say(ACTION_SAY[this.name.toUpperCase()], SAY_PUBLIC);
+        if (target instanceof RoomObject || target instanceof RoomPosition && VISUALS.ACTION_ASSIGNMENT) {
+            Visuals.drawLine(creep, target);
+        }
+    };
     // empty default strategy
     this.defaultStrategy = {
         name: `default-${actionName}`,
@@ -120,6 +124,10 @@ let Action = function(actionName){
     // strategy accessor
     this.selectStrategies = function() {
         return [this.defaultStrategy];
+    };
+    this.getStrategy = function(strategyName, creep, args) {
+        if (_.isUndefined(args)) return creep.getStrategyHandler([this.name], strategyName);
+        else return creep.getStrategyHandler([this.name], strategyName, args);
     };
 };
 module.exports = Action;
