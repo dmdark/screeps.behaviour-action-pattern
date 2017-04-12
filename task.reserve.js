@@ -26,24 +26,26 @@ mod.handleFlagFound = flag => {
         if (flag.room) {
             flag.memory.lastVisible = Game.time;
             flag.memory.ticksToEnd = flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd;
-            const currCheck = _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity);
+            const currCheck = _.get(flag.memory, ['nextCheck', mod.name], Infinity);
             const nextCheck = Game.time + flag.memory.ticksToEnd - mod.VALID_RESERVATION;
             if (nextCheck < currCheck) {
-                _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
+                const memory = Task.reserve.memory(flag);
+                const count = memory.queued.length + memory.spawning.length + memory.running.length;
+                if (count === 0) { // and not currently spawning
+                    _.set(flag.memory, ['nextCheck', mod.name], nextCheck);
+                }
             }
         }
         if (Task.nextCreepCheck(flag, mod.name)) {
             Util.set(flag.memory, 'task', mod.name);
             // check if a new creep has to be spawned
             Task.reserve.checkForRequiredCreeps(flag);
-        } else {
-
         }
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
-    console.log(mod.name, flag.name, FlagDir.flagType(flag), 'checkRequired');
+    //console.log(mod.name, flag.name, FlagDir.flagType(flag), 'checkRequired');
     let spawnParams;
     if (flag.compareTo(FLAG_COLOR.claim.mining)) {
         spawnParams = Task.mining.strategies.reserve.spawnParams(flag);
@@ -57,7 +59,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     let memory = Task.reserve.memory(flag);
     // clean/validate task memory queued creeps
-    Task.validateAll(memory, flag, {roomName: flag.pos.roomName, queues: ['Low', 'Medium'], checkValid: true});
+    Task.validateAll(memory, flag, mod.name, {roomName: flag.pos.roomName, queues: ['Low', 'Medium'], checkValid: true});
     
     // if low & creep in low queue => move to medium queue
     if( spawnParams.queue !== 'Low' && memory.queued.length == 1 ) {
@@ -111,7 +113,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory queued creeps
-        Task.validateQueued(memory, flag, {queues: ['Low', 'Medium']});
+        Task.validateQueued(memory, flag, mod.name, {queues: ['Low', 'Medium']});
         // save spawning creep to task memory
         memory.spawning.push(params);
     }
@@ -130,7 +132,7 @@ mod.handleSpawningCompleted = creep => {
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory spawning creeps
-        Task.validateSpawning(memory, flag);
+        Task.validateSpawning(memory, flag, mod.name);
         // save running creep to task memory
         memory.running.push(creep.name);
     }
@@ -147,7 +149,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.targetName];
     if (flag) {
         const memory = Task.reserve.memory(flag);
-        Task.validateRunning(memory, flag, {roomName: flag.pos.roomName, deadCreep: name});
+        Task.validateRunning(memory, flag, mod.name, {roomName: flag.pos.roomName, deadCreep: name});
     }
 };
 mod.nextAction = creep => {

@@ -109,7 +109,7 @@ mod.spawn = (creepDefinition, destiny, roomParams, onQueued) => {
     if( onQueued ) onQueued(creepSetup);
     return creepSetup;
 };
-mod.validateQueued = function(memory, flag, options = {}) {
+mod.validateQueued = function(memory, flag, task, options = {}) {
     const subKey = options.subKey ? 'queued.' + options.subKey : 'queued';
     const checkPath = options.subKey ? 'nextQueuedCheck.' + options.subKey : 'nextQueuedCheck';
     const queued = Util.get(memory, subKey, []);
@@ -136,12 +136,13 @@ mod.validateQueued = function(memory, flag, options = {}) {
         if (options.subKey && memory.nextQueuedCheck) delete memory.nextQueuedCheck[options.subKey];
         else delete memory.nextQueuedCheck;
     }
-    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
-        console.log('queued', flag.name, flag.memory.task, nextCheck, nextCheck - Game.time);
-        _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
+    const oldCheck = _.get(flag.memory, ['nextCheck', task], Infinity);
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < oldCheck) {
+       //console.log('queued', flag.name, task, oldCheck, oldCheck - Game.time, nextCheck, nextCheck - Game.time);
+        _.set(flag.memory, ['nextCheck', task], nextCheck);
     }
 };
-mod.validateSpawning = function(memory, flag, options = {}) {
+mod.validateSpawning = function(memory, flag, task, options = {}) {
     const subKey = options.subKey ? 'spawning.' + options.subKey : 'spawning';
     const checkPath = options.subKey ? 'nextSpawnCheck.' + options.subKey : 'nextSpawnCheck';
     const spawning = Util.get(memory, subKey, []);
@@ -168,12 +169,13 @@ mod.validateSpawning = function(memory, flag, options = {}) {
             else delete memory.nextSpawnCheck;
         }
     }
-    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
-       console.log('spawning', flag.name, flag.memory.task, nextCheck, nextCheck - Game.time);
-        _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
+    const oldCheck = _.get(flag.memory, ['nextCheck', task], Infinity);
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < oldCheck) {
+       //console.log('spawning', flag.name, task, oldCheck, oldCheck - Game.time, nextCheck, nextCheck - Game.time);
+        _.set(flag.memory, ['nextCheck', task], nextCheck);
     }
 };
-mod.validateRunning = function(memory, flag, options = {}) {
+mod.validateRunning = function(memory, flag, task, options = {}) {
     const subKey = options.subKey ? 'running.' + options.subKey : 'running';
     const checkPath = options.subKey ? 'nextRunningCheck.' + options.subKey : 'nextRunningCheck';
     const running = Util.get(memory, subKey, []);
@@ -195,7 +197,8 @@ mod.validateRunning = function(memory, flag, options = {}) {
             else if( creep.data.spawningTime ) prediction = (creep.data.spawningTime + (routeRange(creep.data.homeRoom, roomName) * 50));
             else prediction = (routeRange(creep.data.homeRoom, roomName) + 1) * 50;
             if( creep.name !== deadCreep && creep.ticksToLive > prediction ) {
-                minRemaining = (!minRemaining || creep.ticksToLive < minRemaining) ? creep.ticksToLive : minRemaining;
+                const untilRenewal = creep.ticksToLive - prediction;
+                minRemaining = (!minRemaining || untilRenewal < minRemaining) ? untilRenewal : minRemaining;
                 validated.push(name);
             }
         };
@@ -209,15 +212,17 @@ mod.validateRunning = function(memory, flag, options = {}) {
             else delete memory.nextRunningCheck;
         }
     }
-    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
-        _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
+    const oldCheck = _.get(flag.memory, ['nextCheck', task], Infinity);
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < oldCheck) {
+       //console.log('running', flag.name, task, oldCheck, oldCheck - Game.time, nextCheck, nextCheck - Game.time);
+        _.set(flag.memory, ['nextCheck', task], nextCheck);
     }
 };
-mod.validateAll = function(memory, flag, options = {}) {
+mod.validateAll = function(memory, flag, task, options = {}) {
     if (_.isUndefined(options.roomName)) return logError('Task.validateAll', 'roomName undefined' + flag + options.subKey);
-    mod.validateQueued(memory, flag, options);
-    mod.validateSpawning(memory, flag, options);
-    mod.validateRunning(memory, flag, options);
+    mod.validateQueued(memory, flag, task, options);
+    mod.validateSpawning(memory, flag, task, options);
+    mod.validateRunning(memory, flag, task, options);
 };
 mod.forceCreepCheck = function(flag, task) {
     _.set(flag.memory, ['nextCheck', task], Game.time);
