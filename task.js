@@ -136,7 +136,7 @@ mod.validateQueued = function(memory, flag, options = {}) {
         if (options.subKey && memory.nextQueuedCheck) delete memory.nextQueuedCheck[options.subKey];
         else delete memory.nextQueuedCheck;
     }
-    if (flag && nextCheck > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
         console.log('queued', flag.name, flag.memory.task, nextCheck, nextCheck - Game.time);
         _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
     }
@@ -168,7 +168,7 @@ mod.validateSpawning = function(memory, flag, options = {}) {
             else delete memory.nextSpawnCheck;
         }
     }
-    if (flag && nextCheck > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
        console.log('spawning', flag.name, flag.memory.task, nextCheck, nextCheck - Game.time);
         _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
     }
@@ -209,7 +209,7 @@ mod.validateRunning = function(memory, flag, options = {}) {
             else delete memory.nextRunningCheck;
         }
     }
-    if (flag && nextCheck > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
+    if (flag && (nextCheck - Game.time) > 0 && nextCheck < _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity)) {
         _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
     }
 };

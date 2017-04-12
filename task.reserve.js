@@ -2,6 +2,8 @@
 let mod = {};
 module.exports = mod;
 mod.name = 'reserve';
+mod.VALID_RESERVATION = 1000;
+mod.URGENT_RESERVATION = 250;
 mod.creep = {
     reserver: {
         fixedBody: {
@@ -19,13 +21,24 @@ mod.register = () => {};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a reserve, exploit or remote mine flag
-    if ((flag.compareTo(FLAG_COLOR.claim.reserve) ||
-        flag.compareTo(FLAG_COLOR.invade.exploit) ||
-        flag.compareTo(FLAG_COLOR.claim.mining)) &&
-        Task.nextCreepCheck(flag, mod.name)) {
-        Util.set(flag.memory, 'task', mod.name);
-        // check if a new creep has to be spawned
-        Task.reserve.checkForRequiredCreeps(flag);
+    if ((flag.compareTo(FLAG_COLOR.claim.reserve) || flag.compareTo(FLAG_COLOR.invade.exploit) || flag.compareTo(FLAG_COLOR.claim.mining)) &&
+        (Room.isControllerRoom(flag.pos.roomName) || (flag.room && flag.room.controller))) {
+        if (flag.room) {
+            flag.memory.lastVisible = Game.time;
+            flag.memory.ticksToEnd = flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd;
+            const currCheck = _.get(flag.memory, ['nextCheck', flag.memory.task], Infinity);
+            const nextCheck = Game.time + flag.memory.ticksToEnd - mod.VALID_RESERVATION;
+            if (nextCheck < currCheck) {
+                _.set(flag.memory, ['nextCheck', flag.memory.task], nextCheck);
+            }
+        }
+        if (Task.nextCreepCheck(flag, mod.name)) {
+            Util.set(flag.memory, 'task', mod.name);
+            // check if a new creep has to be spawned
+            Task.reserve.checkForRequiredCreeps(flag);
+        } else {
+
+        }
     }
 };
 // check if a new creep has to be spawned
