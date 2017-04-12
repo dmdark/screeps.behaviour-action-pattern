@@ -162,17 +162,14 @@ mod.nextAction = creep => {
 };
 // get task memory
 mod.memory = (flag) => {
-    if( !flag.memory.tasks ) 
-        flag.memory.tasks = {};
-    if( !flag.memory.tasks.reserve ) {
-        flag.memory.tasks.reserve = {
-            valid: Game.time,
-            queued: [], 
-            spawning: [],
-            running: []
-        };
-    }
-    return flag.memory.tasks.reserve;
+    const memory = Util.get(flag.memory, ['tasks', 'reserve'], {
+        queued: [], 
+        spawning: [],
+        running: []
+    });
+    // temporary migration, remove if in dev
+    delete memory.valid;
+    return memory;
 };
 mod.strategies = {
     defaultStrategy: {

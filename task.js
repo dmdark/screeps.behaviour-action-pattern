@@ -55,10 +55,13 @@ mod.register = function () {
     });
 };
 mod.memory = (task, s) => { // task:  (string) name of the task, s: (string) any selector for that task, could be room name, flag name, enemy name
-    if( !Memory.tasks ) Memory.tasks = {};
-    if( !Memory.tasks[task] ) Memory.tasks[task] = {};
-    if( !Memory.tasks[task][s] ) Memory.tasks[task][s] = {};
-    return Memory.tasks[task][s];
+    const memory = Util.get(Memory, ['tasks', task, s], {});
+    // temporary migration, remove if in dev
+    delete memory.queuedValid;
+    delete memory.runningValid;
+    delete memory.spawningValid;
+
+    return memory;
 };
 mod.clearMemory = (task, s) => {
     if( Memory.tasks[task] && Memory.tasks[task][s] )
