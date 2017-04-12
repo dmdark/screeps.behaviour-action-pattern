@@ -73,7 +73,7 @@ global.inject = (base, alien, namespace) => {
             typeof alien[key] === 'object' && !Array.isArray(alien[key])) {
             global.inject(base[key], alien[key], namespace);
         } else {
-            base[key] = alien[key]
+            base[key] = alien[key];
         }
     }
 };
@@ -106,8 +106,8 @@ global.load = (modName) => {
     }
     if( mod ) {
         // load viral overrides 
-        mod = infect(mod, 'internalViral', modName);
-        mod = infect(mod, 'viral', modName);
+        infect(mod, 'internalViral', modName);
+        infect(mod, 'viral', modName);
     }
     return mod;
 };
