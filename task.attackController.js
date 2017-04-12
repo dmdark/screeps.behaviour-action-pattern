@@ -1,19 +1,21 @@
 // This task will react on Red/Cyan flags, sending a giant (RCL7 Req) claiming creep to the flags position.
 let mod = {};
 module.exports = mod;
+mod.name = 'attackController';
 // hook into events
 mod.register = () => {};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a Green/Purple flag
-    if( flag.compareTo(FLAG_COLOR.invade.attackController) ){
+    if( flag.compareTo(FLAG_COLOR.invade.attackController) && Task.nextCreepCheck(flag, mod.name) ){
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
-        
         Task.attackController.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     const roomName = flag.pos.roomName;
     const room = Game.rooms[roomName];
     // get task memory

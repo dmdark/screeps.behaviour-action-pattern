@@ -1,19 +1,22 @@
 // This task will react on claim flags (Green/Green), sending a claiming creep to the flags position.
 let mod = {};
-module.exports = mod; 
+module.exports = mod;
+mod.name = 'claim';
 mod.minControllerLevel = 3;
 // hook into events
 mod.register = () => {};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a yellow/yellow flag
-    if( flag.compareTo(FLAG_COLOR.claim) ){
+    if( flag.compareTo(FLAG_COLOR.claim) && Task.nextCreepCheck(flag, mod.name) ){
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.claim.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     // get task memory
     let memory = Task.claim.memory(flag);
     // re-validate if too much time has passed

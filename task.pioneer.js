@@ -1,6 +1,7 @@
 // This task will react on pioneer flags - 4 for Green/White, 1 for Green/Red
 let mod = {};
 module.exports = mod;
+mod.name = 'pioneer';
 // hook into events
 mod.register = () => {};
 mod.handleRoomDied = room => {
@@ -40,13 +41,15 @@ mod.handleRoomDied = room => {
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a pioneer single or spawn
-    if( flag.compareTo(FLAG_COLOR.claim.pioneer)){
+    if( flag.compareTo(FLAG_COLOR.claim.pioneer) && Task.nextCreepCheck(flag, mod.name)){
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.pioneer.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     //only when room is owned
     if( !flag || (flag.room && !flag.room.my && !flag.room.reserved)) {
         if (!PIONEER_UNOWNED) {

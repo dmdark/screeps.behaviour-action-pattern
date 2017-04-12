@@ -83,6 +83,7 @@ mod.needsReplacement = (creep) => {
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     const roomName = flag.pos.roomName;
     const room = Game.rooms[roomName];
     // Use the roomName as key in Task.memory?
@@ -140,7 +141,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     // only spawn haulers for sources a miner has been spawned for
     const maxHaulers = Math.ceil(memory.running.remoteMiner.length * REMOTE_HAULER.MULTIPLIER);
-    if(haulerCount < maxHaulers && (!memory.capacityLastChecked || Game.time - memory.capacityLastChecked > REMOTE_HAULER.CHECK_INTERVAL)) {
+    if(haulerCount < maxHaulers && (!memory.capacityLastChecked || Game.time - memory.capacityLastChecked > TASK_CREEP_CHECK_INTERVAL)) {
         for(let i = haulerCount; i < maxHaulers; i++) {
             let minWeight = i >= 1 && REMOTE_HAULER.MIN_WEIGHT;
             const spawnRoom = mod.strategies.hauler.spawnRoom(roomName, minWeight);
@@ -340,10 +341,15 @@ mod.setupCreep = function(roomName, definition) {
             });
     }
 };
+mod.getFlag = function(roomName) {
+    return FlagDir.find(FLAG_COLOR.claim.mining, new RoomPosition(25, 25, roomName));
+};
 mod.carry = function(roomName, partChange) {
     const memory = Task.mining.memory(roomName);
     memory.carryParts = (memory.carryParts || 0) + (partChange || 0);
     const population = Math.round(mod.carryPopulation(roomName) * 100);
+    Task.forceCreepCheck(Task.mining.getFlag(roomName), mod.name);
+    delete memory.capacityLastChecked;
     return `Task.${mod.name}: hauler carry capacity for ${roomName} ${memory.carryParts >= 0 ? 'increased' : 'decreased'} by ${Math.abs(memory.carryParts)}. Currently at ${population}% of desired capacity`;
 };
 mod.harvest = function(roomName, partChange) {

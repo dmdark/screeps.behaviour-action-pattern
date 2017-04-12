@@ -23,12 +23,14 @@ mod.handleFlagFound = flag => {
         flag.compareTo(FLAG_COLOR.invade.exploit) ||
         flag.compareTo(FLAG_COLOR.claim.mining)) &&
         Task.nextCreepCheck(flag, mod.name)) {
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.reserve.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, FlagDir.flagType(flag), 'checkRequired');
     let spawnParams;
     if (flag.compareTo(FLAG_COLOR.claim.mining)) {
         spawnParams = Task.mining.strategies.reserve.spawnParams(flag);

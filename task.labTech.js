@@ -1,6 +1,7 @@
 // This task will react on labTech flags purple/white
 const mod = {};
 module.exports = mod;
+mod.name = 'labTech';
 // hook into events
 mod.register = () => {
     // when a new flag has been found (occurs every tick, for each flag)
@@ -17,13 +18,15 @@ mod.register = () => {
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a labTech flag
-    if (flag.color == FLAG_COLOR.labs.labTech.color && flag.secondaryColor == FLAG_COLOR.labs.labTech.secondaryColor) {
+    if (flag.compareTo(FLAG_COLOR.labs.labTech) && Task.nextCreepCheck(flag, mod.name)) {
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.labTech.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     // get task memory
     const memory = Task.labTech.memory(flag);
     // re-validate if too much time has passed

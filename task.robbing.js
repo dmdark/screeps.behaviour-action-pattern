@@ -7,13 +7,15 @@ mod.register = () => {};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a robbing flag
-    if (flag.compareTo(FLAG_COLOR.invade.robbing)) {
+    if (flag.compareTo(FLAG_COLOR.invade.robbing) && Task.nextCreepCheck(flag, mod.name)) {
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.robbing.checkForRequiredCreeps(flag);
     }
 };
 // check if a new creep has to be spawned
 mod.checkForRequiredCreeps = (flag) => {
+    console.log(mod.name, flag.name, 'checkRequired');
     // get task memory
     let memory = Task.robbing.memory(flag);
     // re-validate if too much time has passed
