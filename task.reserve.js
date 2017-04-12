@@ -28,15 +28,18 @@ mod.handleFlagFound = flag => {
             flag.memory.ticksToEnd = flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd;
             const currCheck = _.get(flag.memory, ['nextCheck', mod.name], Infinity);
             const nextCheck = Game.time + flag.memory.ticksToEnd - mod.VALID_RESERVATION;
-            if (nextCheck < currCheck) {
+            if (nextCheck < currCheck && !memory.waitForCreeps) {
                 const memory = Task.reserve.memory(flag);
                 const count = memory.queued.length + memory.spawning.length + memory.running.length;
                 if (count === 0) { // and not currently spawning
                     _.set(flag.memory, ['nextCheck', mod.name], nextCheck);
+                } else {
+                    memory.waitForCreeps = true;
                 }
             }
         }
         if (Task.nextCreepCheck(flag, mod.name)) {
+            delete memory.waitForCreeps;
             Util.set(flag.memory, 'task', mod.name);
             // check if a new creep has to be spawned
             Task.reserve.checkForRequiredCreeps(flag);
