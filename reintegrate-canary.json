@@ -1,0 +1,31 @@
+{
+  "ocs.internal": {
+    "reset": "upstream/dev2",
+    "merge": [
+      "upstream/change/diplomaticDictatorship",
+      "upstream/change/warriorDoctors",
+      "upstream/feature/actionRenewing",
+      "upstream/fix/hoppers",
+      "upstream/fix/ME",
+      "upstream/fix/taskValidation",
+      "upstream/task/invasion",
+      "upstream/task/train-basic"
+    ]
+  },
+  "ocs.public": {
+    "reset": "upstream/dev",
+    "merge": [
+      "upstream/bug/droppingMovesToRandomFlag",
+      "upstream/change/creepInQueue",
+      "upstream/change/criticalSpawning",
+      "upstream/change/efficientFeeding",
+      "upstream/change/infectiousMemory",
+      "upstream/change/injectMerge",
+      "upstream/change/roomJSON",
+      "upstream/feature/explainSaysAssignment",
+      "upstream/fix/badTicks",
+      "upstream/fix/taskValidation",
+      "upstream/update/roomLayout"
+    ]
+  }
+}
