@@ -394,9 +394,9 @@ module.exports = {
             .value() // for some reason _.set is broken in _.forEach
             .forEach(s => _.set(layout, [s.pos.x - startX, s.pos.y - startY], s.structureType));
         // RegEx Magic
-        const replacementMap = {['null']:'',['"extension"']:'STRUCTURE_EXTENSION',['"road"']:'STRUCTURE_ROAD',['"tower"']:'STRUCTURE_TOWER',['"spawn"']:'STRUCTURE_SPAWN',['"link"']:'STRUCTURE_LINK',['"storage"']:'STRUCTURE_STORAGE',['"terminal"']:'STRUCTURE_TERMINAL',['"nuker"']:'STRUCTURE_NUKER',['"powerSpawn"']:'STRUCTURE_POWER_SPAWN',['"observer"']:'STRUCTURE_OBSERVER'};
+        const replacementMap = {['null']:'',['"extension"']:'STRUCTURE_EXTENSION',['"road"']:'STRUCTURE_ROAD',['"tower"']:'STRUCTURE_TOWER',['"spawn"']:'STRUCTURE_SPAWN',['"link"']:'STRUCTURE_LINK',['"storage"']:'STRUCTURE_STORAGE',['"terminal"']:'STRUCTURE_TERMINAL',['"nuker"']:'STRUCTURE_NUKER',['"powerSpawn"']:'STRUCTURE_POWER_SPAWN',['"observer"']:'STRUCTURE_OBSERVER',['"rampart"']:'STRUCTURE_RAMPART',['"lab"']:'STRUCTURE_LAB'};
         const re = new RegExp(Object.keys(replacementMap).join('|'), 'g');
-        return JSON.stringify(layout).replace(re, match => replacementMap[map]);
+        return JSON.stringify(layout).replace(re, match => replacementMap[match]);
     },
     
     /**
