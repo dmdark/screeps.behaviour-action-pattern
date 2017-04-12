@@ -264,9 +264,13 @@ module.exports.loop = function () {
     if (Memory.cloaked === undefined) {
         Memory.cloaked = {};
     }
-    // ensure up to date parameters
-    _.assign(global, load("parameter"));
     
+    Util.set(Memory, 'parameters', {});
+    _.assign(global, {parameters: Memory.parameters}); // allow for shorthand access in console
+    // ensure up to date parameters, override in memory
+    _.assign(global, load("parameter"));
+    _.merge(global, parameters);
+   
     // process loaded memory segments
     OCSMemory.processSegments();
     p.checkCPU('processSegments', PROFILING.ANALYZE_LIMIT);
