@@ -29,8 +29,8 @@ mod.handleFlagFound = flag => {
             flag.memory.ticksToEnd = flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd;
             const currCheck = _.get(flag.memory, ['nextCheck', mod.name], Infinity);
             const nextCheck = Game.time + flag.memory.ticksToEnd - mod.VALID_RESERVATION;
+            const memory = Task.reserve.memory(flag);
             if (nextCheck < currCheck && !memory.waitForCreeps) {
-                const memory = Task.reserve.memory(flag);
                 const count = memory.queued.length + memory.spawning.length + memory.running.length;
                 if (count === 0) { // and not currently spawning
                     _.set(flag.memory, ['nextCheck', mod.name], nextCheck);
