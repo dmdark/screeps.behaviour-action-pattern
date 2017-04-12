@@ -3,14 +3,6 @@ module.exports = mod;
 mod.minControllerLevel = 2;
 mod.name = 'mining';
 mod.register = () => {};
-mod.checkFlag = (flag) => {
-    if (flag.compareTo(FLAG_COLOR.claim.mining)) {
-        flag.memory.roomName = flag.pos.roomName;
-        flag.memory.task = mod.name;
-        return true;
-    }
-    return false;
-};
 mod.handleFlagRemoved = flagName => {
     // check flag
     const flagMem = Memory.flags[flagName];
@@ -28,7 +20,9 @@ mod.handleFlagRemoved = flagName => {
 };
 mod.handleFlagFound = flag => {
     // Analyze Flag
-    if( Task.mining.checkFlag(flag) ){
+    if (flag.compareTo(FLAG_COLOR.claim.mining) && Task.nextCreepCheck(flag, mod.name)) {
+        Util.set(flag.memory, 'roomName', flag.pos.roomName);
+        Util.set(flag.memory, 'task', mod.name);
         // check if a new creep has to be spawned
         Task.mining.checkForRequiredCreeps(flag);
     }
@@ -38,18 +32,16 @@ mod.handleSpawningStarted = params => {
     if ( !params.destiny || !params.destiny.task || params.destiny.task != mod.name )
         return;
     const memory = Task.mining.memory(params.destiny.room);
+    const flag = Game.flags[params.destiny.targetName];
+    if (flag) {
+        // validate currently queued entries and clean out spawned creep
+        const priority = _.find(Task.mining.creep, {behaviour: params.destiny.type}).queue;
+        Task.validateQueued(memory, flag, {subKey: params.destiny.type, queues: [priority]});
 
-    // validate currently queued entries and clean out spawned creep
-    const priority = _.find(Task.mining.creep, {behaviour: params.destiny.type}).queue;
-    Task.validateQueued(memory, {subKey: params.destiny.type, queues: [priority]});
-
-    if (params.body) params.body = _.countBy(params.body);
-    // save spawning creep to task memory
-    memory.spawning[params.destiny.type].push(params);
-
-    // set a timer to make sure we re-validate this spawning entry if it still remains after the creep has spawned
-    const nextCheck = memory.nextSpawnCheck[params.destiny.type];
-    if (!nextCheck || (Game.time + params.spawnTime) < nextCheck) memory.nextSpawnCheck[params.destiny.type] = Game.time + params.spawnTime + 1;
+        if (params.body) params.body = _.countBy(params.body);
+        // save spawning creep to task memory
+        memory.spawning[params.destiny.type].push(params);
+    }
 };
 mod.handleSpawningCompleted = creep => {
     if ( !creep.data.destiny || !creep.data.destiny.task || creep.data.destiny.task != mod.name )
@@ -57,15 +49,18 @@ mod.handleSpawningCompleted = creep => {
     if( creep.data.destiny.homeRoom ) {
         creep.data.homeRoom = creep.data.destiny.homeRoom;
     }
-    // calculate & set time required to spawn and send next substitute creep
-    // TODO: implement better distance calculation
-    creep.data.predictedRenewal = creep.data.spawningTime + (routeRange(creep.data.homeRoom, creep.data.destiny.room)*50);
-    // get task memory
-    const memory = Task.mining.memory(creep.data.destiny.room);
-    // save running creep to task memory
-    memory.running[creep.data.destiny.type].push(creep.name);
-    // clean/validate task memory spawning creeps
-    Task.validateSpawning(memory, {roomName: creep.data.destiny.room, subKey: creep.data.destiny.type});
+    const flag = Game.flags[creep.data.destiny.targetName];
+    if (flag) {
+        // calculate & set time required to spawn and send next substitute creep
+        // TODO: implement better distance calculation
+        creep.data.predictedRenewal = creep.data.spawningTime + (routeRange(creep.data.homeRoom, creep.data.destiny.room)*50);
+        // get task memory
+        const memory = Task.mining.memory(creep.data.destiny.room);
+        // save running creep to task memory
+        memory.running[creep.data.destiny.type].push(creep.name);
+        // clean/validate task memory spawning creeps
+        Task.validateSpawning(memory, flag, {roomName: creep.data.destiny.room, subKey: creep.data.destiny.type});
+    }
 };
 // when a creep died (or will die soon)
 mod.handleCreepDied = name => {
@@ -74,9 +69,12 @@ mod.handleCreepDied = name => {
     // ensure it is a creep which has been requested by this task (else return)
     if (!mem || !mem.destiny || !mem.destiny.task || mem.destiny.task != mod.name)
         return;
-    // clean/validate task memory running creeps
-    const memory = Task.mining.memory(mem.destiny.room);
-    Task.validateRunning(memory, {subKey: mem.creepType, roomName: mem.destiny.room, deadCreep: name});
+    const flag = Game.flags[mem.destiny.targetName];
+    if (flag) {
+        // clean/validate task memory running creeps
+        const memory = Task.mining.memory(mem.destiny.room);
+        Task.validateRunning(memory, flag, {subKey: mem.creepType, roomName: mem.destiny.room, deadCreep: name});
+    }
 };
 mod.needsReplacement = (creep) => {
     // this was used below in maxWeight, perhaps it's more accurate?
@@ -102,7 +100,7 @@ mod.checkForRequiredCreeps = (flag) => {
 
     const countExisting = type => {
         const priority = _.find(Task.mining.creep, {behaviour: type}).queue;
-        Task.validateAll(memory, {roomName, subKey: type, queues: [priority], checkValid: true});
+        Task.validateAll(memory, flag, {roomName, subKey: type, queues: [priority], checkValid: true, task: mod.name});
         return memory.queued[type].length + memory.spawning[type].length + memory.running[type].length;
     };
     const haulerCount = countExisting('remoteHauler');

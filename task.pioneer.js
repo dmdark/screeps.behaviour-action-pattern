@@ -62,7 +62,7 @@ mod.checkForRequiredCreeps = (flag) => {
     let memory = Task.pioneer.memory(flag);
 
     // re-validate if too much time has passed in the queue
-    Task.validateAll(memory, {roomName: flag.pos.roomName, subKey: 'pioneer', checkValid: true});
+    Task.validateAll(memory, flag, {roomName: flag.pos.roomName, subKey: 'pioneer', checkValid: true});
     
     // decide number of pioneers required
     let count = memory.queued.length + memory.spawning.length + memory.running.length;
@@ -112,7 +112,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         const type = params.destiny.type;
         // default to both as temporary migration
         const priority = type ? _.find(Task.pioneer.creep, {behaviour: type}).queue : ['Low', 'High'];
-        Task.validateQueued(memory, {queues: [priority]});
+        Task.validateQueued(memory, flag, {queues: [priority]});
     }
 };
 // when a creep completed spawning
@@ -132,7 +132,7 @@ mod.handleSpawningCompleted = creep => {
         // save running creep to task memory
         memory.running.push(creep.name);
         // clean/validate task memory spawning creeps
-        Task.validateSpawning(memory);
+        Task.validateSpawning(memory, flag);
     }
 };
 // when a creep died (or will die soon)
@@ -146,7 +146,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.flagName];
     if (flag) {
         let memory = Task.pioneer.memory(flag);
-        Task.validateRunning(memory, {roomName: flag.pos.roomName, deadCreep: name});
+        Task.validateRunning(memory, flag, {roomName: flag.pos.roomName, deadCreep: name});
     }
 };
 // get task memory

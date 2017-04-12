@@ -19,9 +19,10 @@ mod.register = () => {};
 // for each flag
 mod.handleFlagFound = flag => {
     // if it is a reserve, exploit or remote mine flag
-    if( flag.compareTo(FLAG_COLOR.claim.reserve) ||
+    if ((flag.compareTo(FLAG_COLOR.claim.reserve) ||
         flag.compareTo(FLAG_COLOR.invade.exploit) ||
-        flag.compareTo(FLAG_COLOR.claim.mining)){
+        flag.compareTo(FLAG_COLOR.claim.mining)) &&
+        Task.nextCreepCheck(flag, mod.name)) {
         // check if a new creep has to be spawned
         Task.reserve.checkForRequiredCreeps(flag);
     }
@@ -41,7 +42,7 @@ mod.checkForRequiredCreeps = (flag) => {
     // get task memory
     let memory = Task.reserve.memory(flag);
     // clean/validate task memory queued creeps
-    Task.validateAll(memory, {roomName: flag.pos.roomName, queues: ['Low', 'Medium'], checkValid: true});
+    Task.validateAll(memory, flag, {roomName: flag.pos.roomName, queues: ['Low', 'Medium'], checkValid: true});
     
     // if low & creep in low queue => move to medium queue
     if( spawnParams.queue !== 'Low' && memory.queued.length == 1 ) {
@@ -95,7 +96,7 @@ mod.handleSpawningStarted = params => { // params: {spawn: spawn.name, name: cre
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory queued creeps
-        Task.validateQueued(memory, {queues: ['Low', 'Medium']});
+        Task.validateQueued(memory, flag, {queues: ['Low', 'Medium']});
         // save spawning creep to task memory
         memory.spawning.push(params);
     }
@@ -114,7 +115,7 @@ mod.handleSpawningCompleted = creep => {
         // get task memory
         let memory = Task.reserve.memory(flag);
         // clean/validate task memory spawning creeps
-        Task.validateSpawning(memory);
+        Task.validateSpawning(memory, flag);
         // save running creep to task memory
         memory.running.push(creep.name);
     }
@@ -131,7 +132,7 @@ mod.handleCreepDied = name => {
     let flag = Game.flags[mem.destiny.targetName];
     if (flag) {
         const memory = Task.reserve.memory(flag);
-        Task.validateRunning(memory, {roomName: flag.pos.roomName, deadCreep: name});
+        Task.validateRunning(memory, flag, {roomName: flag.pos.roomName, deadCreep: name});
     }
 };
 mod.nextAction = creep => {
