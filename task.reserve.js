@@ -24,12 +24,12 @@ mod.handleFlagFound = flag => {
     // if it is a reserve, exploit or remote mine flag
     if ((flag.compareTo(FLAG_COLOR.claim.reserve) || flag.compareTo(FLAG_COLOR.invade.exploit) || flag.compareTo(FLAG_COLOR.claim.mining)) &&
         (Room.isControllerRoom(flag.pos.roomName) || (flag.room && flag.room.controller))) {
+        const memory = Task.reserve.memory(flag);
         if (flag.room) {
             flag.memory.lastVisible = Game.time;
             flag.memory.ticksToEnd = flag.room.controller.reservation && flag.room.controller.reservation.ticksToEnd;
             const currCheck = _.get(flag.memory, ['nextCheck', mod.name], Infinity);
             const nextCheck = Game.time + flag.memory.ticksToEnd - mod.VALID_RESERVATION;
-            const memory = Task.reserve.memory(flag);
             if (nextCheck < currCheck && !memory.waitForCreeps) {
                 const count = memory.queued.length + memory.spawning.length + memory.running.length;
                 if (count === 0) { // and not currently spawning
